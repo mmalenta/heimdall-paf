@@ -21,13 +21,14 @@
 // cached_allocator: a simple allocator for caching allocation requests
 struct cached_allocator
 {
+  typedef char value_type;
   cached_allocator() {}
 
-  void *allocate(std::ptrdiff_t num_bytes)
+  char *allocate(std::ptrdiff_t num_bytes)
   {
 	  //std::cout << "cached_allocator::allocate()" << std::endl;
 	  
-    void *result = 0;
+    char *result = 0;
 
     // search the cache for a free block
     free_blocks_type::iterator free_block = free_blocks.find(num_bytes);
@@ -52,7 +53,7 @@ struct cached_allocator
 	      //std::cout << "cached_allocator::allocator(): no free block found; calling cuda::malloc" << std::endl;
 
         // allocate memory and convert cuda::pointer to raw pointer
-        result = thrust::system::cuda::malloc(num_bytes).get();
+        result = thrust::system::cuda::malloc<char>(num_bytes).get();
       }
       catch(std::runtime_error &e)
       {
@@ -66,7 +67,7 @@ struct cached_allocator
     return result;
   }
 
-  void deallocate(void *ptr)
+  void deallocate(char *ptr, size_t n)
   {
     // erase the allocated block from the allocated blocks map
     allocated_blocks_type::iterator iter = allocated_blocks.find(ptr);
@@ -87,7 +88,7 @@ struct cached_allocator
         ++i)
     {
       // transform the pointer to cuda::pointer before calling cuda::free
-      thrust::system::cuda::free(thrust::system::cuda::pointer<void>(i->second));
+      thrust::system::cuda::free(thrust::system::cuda::pointer<char>(i->second));
     }
 
     for(allocated_blocks_type::iterator i = allocated_blocks.begin();
@@ -95,12 +96,12 @@ struct cached_allocator
         ++i)
     {
       // transform the pointer to cuda::pointer before calling cuda::free
-      thrust::system::cuda::free(thrust::system::cuda::pointer<void>(i->first));
+      thrust::system::cuda::free(thrust::system::cuda::pointer<char>(i->first));
     }
   }
 
-  typedef std::multimap<std::ptrdiff_t, void*> free_blocks_type;
-  typedef std::map<void *, std::ptrdiff_t>     allocated_blocks_type;
+  typedef std::multimap<std::ptrdiff_t, char*> free_blocks_type;
+  typedef std::map<char *, std::ptrdiff_t>     allocated_blocks_type;
 
   free_blocks_type      free_blocks;
   allocated_blocks_type allocated_blocks;
@@ -134,5 +135,5 @@ template<typename Pointer>
 {
 	//std::cout << "return_temporary_buffer" << std::endl;
   // return the pointer to the allocator
-  g_allocator.deallocate(thrust::raw_pointer_cast(p));
+  g_allocator.deallocate(thrust::raw_pointer_cast(p), 0);
 }
