@@ -29,7 +29,7 @@ void hd_set_default_params(hd_params* params) {
 	params->dm_min          = 0.0;
 	params->dm_max          = 1000.0;
 	params->dm_tol          = 1.25;
-	params->dm_pulse_width  = 40;//e-6; // The expected intrinsic width of the pulse signal in microseconds
+	params->dm_pulse_width  = 500;//e-6; // The expected intrinsic width of the pulse signal in microseconds
 	params->dm_nbits        = 32;//8;
 	params->use_scrunching  = true;
 	params->scrunch_tol     = 1.15;

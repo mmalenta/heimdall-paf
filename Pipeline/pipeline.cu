@@ -193,13 +193,6 @@ hd_error hd_create_pipeline(hd_pipeline* pipeline_, hd_params params) {
     cout << "\tInitialisation complete." << endl;
   }
   
-  if( params.verbosity >= 1 ) {
-    cout << "Using Thrust v"
-         << THRUST_MAJOR_VERSION << "."
-         << THRUST_MINOR_VERSION << "."
-         << THRUST_SUBMINOR_VERSION << endl;
-  }
-  
   return HD_NO_ERROR;
 }
 
@@ -290,22 +283,6 @@ hd_error hd_execute(hd_pipeline pl,
   
   stop_timer(clean_timer);
   
-  if( pl->params.verbosity >= 3 ) {
-    /*
-    cout << "\tWriting killmask to disk..." << endl;
-    std::ofstream killfile("killmask.dat");
-    for( size_t i=0; i<h_killmask.size(); ++i ) {
-      killfile << h_killmask[i] << "\n";
-    }
-    killfile.close();
-    
-    cout << "\tWriting cleaned filterbank to disk..." << endl;
-    write_host_filterbank(&pl->h_clean_filterbank[0],
-                          pl->params.nchans, nsamps, nbits,
-                          pl->params.dt, pl->params.f0, pl->params.df,
-                          "clean_filterbank.fil");
-    */
-  }
   if( pl->params.verbosity >= 2 ) {
     cout << "\tGenerating DM list..." << endl;
   }
@@ -329,7 +306,8 @@ hd_error hd_execute(hd_pipeline pl,
   
   const dedisp_size* scrunch_factors =
     dedisp_get_dt_factors(pl->dedispersion_plan);
-  if (pl->params.verbosity >= 3 ) 
+    
+  /*if (pl->params.verbosity >= 3 ) 
   {
     cout << "DM List for " << pl->params.dm_min << " to " << pl->params.dm_max << endl;
     for( hd_size i=0; i<dm_count; ++i ) {
@@ -344,7 +322,8 @@ hd_error hd_execute(hd_pipeline pl,
     }
     cout << endl;
   }
-  
+  */
+
   // Set channel killmask for dedispersion
   dedisp_set_killmask(pl->dedispersion_plan, &h_killmask[0]);
   
@@ -412,12 +391,6 @@ hd_error hd_execute(hd_pipeline pl,
   stop_timer(dedisp_timer);
   if( derror != DEDISP_NO_ERROR ) {
     return throw_dedisp_error(derror);
-  }
-  
-  if( beam == 0 && first_idx == 0 ) {
-    // TESTING
-    //write_host_time_series((unsigned int*)out, nsamps_computed, out_nbits,
-    //                       pl->params.dt, "dedispersed_0.tim");
   }
   
   if( pl->params.verbosity >= 2 ) {
@@ -490,12 +463,6 @@ hd_error hd_execute(hd_pipeline pl,
     stop_timer(baseline_timer);
     if( error != HD_NO_ERROR ) {
       return throw_error(error);
-    }
-    
-    if( beam == 0 && dm_idx == write_dm && first_idx == 0 ) {
-      // TESTING
-      //write_device_time_series(time_series, cur_nsamps,
-      //                         cur_dt, "baselined.tim");
     }
     // -------------------
     
@@ -599,14 +566,6 @@ hd_error hd_execute(hd_pipeline pl,
                         thrust::multiplies<hd_float>());
 
       stop_timer(filter_timer);
-      
-      if( beam == 0 && dm_idx == write_dm && first_idx == 0 &&
-          filter_width == 8 ) {
-        // TESTING
-        //write_device_time_series(filtered_series,
-        //                         cur_nsamps_filtered,
-        //                         cur_dt, "filtered.tim");
-      }
       
       hd_size prev_giant_count = d_giant_peaks.size();
       
@@ -775,7 +734,8 @@ hd_error hd_execute(hd_pipeline pl,
   strftime (buffer, 64, HD_TIMESTR, (struct tm*) gmtime(&now));
 
   std::stringstream ss;
-  ss << std::setw(2) << std::setfill('0') << pl->params.beam+1;
+  // NOTE: Add 1 to the beam number - some scripts that work on the data require that
+  ss << std::setw(2) << std::setfill('0') << pl->params.beam + 1;
 
   std::ostringstream oss;
 

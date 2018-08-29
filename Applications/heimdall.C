@@ -73,9 +73,7 @@ int main(int argc, char* argv[])
       return -1;
     }
 
-    data_source = (DataSource *) d;
-    if (!params.override_beam)
-      params.beam = d->get_beam() - 1;
+    params.beam = d->get_beam();
   }
   else 
   {
@@ -90,20 +88,14 @@ int main(int argc, char* argv[])
   }
 #endif
 
-  if (!params.override_beam)
-  {
-    if (data_source->get_beam() > 0)
-      params.beam = data_source->get_beam() - 1;
-    else
-      params.beam = 0;
-  }
+  params.beam = data_source->get_beam();
 
   params.f0 = data_source->get_f0();
   params.df = data_source->get_df();
   params.dt = data_source->get_tsamp();
 
   if ( params.verbosity > 0)
-    cout << "processing beam " << (params.beam+1)  << endl;
+    cout << "Processing beam " << params.beam  << endl;
 
   size_t stride = data_source->get_stride();
   size_t nbits  = data_source->get_nbit();
@@ -115,7 +107,7 @@ int main(int argc, char* argv[])
   // ideally this should be nsamps_gulp + max overlap, but just do x2
   size_t filterbank_bytes = 2 * nsamps_gulp * stride;
   if ( params.verbosity >= 2)
-    cout << "allocating filterbank data vector for " << nsamps_gulp
+    cout << "Allocating filterbank data vector for " << nsamps_gulp
          << " samples with size " << filterbank_bytes << " bytes" << endl;
   std::vector<hd_byte> filterbank(filterbank_bytes);
   
@@ -136,7 +128,6 @@ int main(int argc, char* argv[])
   if( params.verbosity >= 1 ) {
     cout << "Beginning data processing, requesting " << nsamps_gulp << " samples" << endl;
   }
-
 
   // start a timer for the whole pipeline
   //Stopwatch pipeline_timer;
