@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
       return -1;
     }
 
+    data_source = (DataSource *) d;
     params.beam = d->get_beam();
   }
   else 
